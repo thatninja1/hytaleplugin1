@@ -1,8 +1,8 @@
 {
   "Group": "com.example",
-  "Name": "ExamplePlugin",
+  "Name": "EconomyPlugin",
   "Version": "1.0.0",
-  "Description": "Your plugin description here.",
+  "Description": "A simple economy plugin with balances and transfers.",
   "Authors": [
     {
       "Name": "Your Name",
@@ -15,5 +15,5 @@
   "Dependencies": {},
   "OptionalDependencies": {},
   "DisabledByDefault": false,
-  "Main": "com.example.plugin.ExamplePlugin"
+  "Main": "com.example.plugin.EconomyPlugin"
 }

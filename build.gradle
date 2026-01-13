@@ -7,9 +7,6 @@ version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
-    flatDir {
-        dirs 'libraries'
-    }
 }
 
 java {
@@ -24,7 +21,11 @@ tasks.withType(JavaCompile).configureEach {
 
 dependencies {
     // Libraries
-    compileOnly name: 'HytaleServer'
+    def hytaleJar = file('libraries/HytaleServer.jar')
+    def useStubs = project.hasProperty('ci') || !hytaleJar.exists()
+    if (!useStubs) {
+        compileOnly files(hytaleJar)
+    }
     implementation 'com.google.code.gson:gson:2.11.0'
     
     // Tests
@@ -34,4 +35,14 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+sourceSets {
+    main {
+        java {
+            if (project.hasProperty('ci') || !file('libraries/HytaleServer.jar').exists()) {
+                srcDir 'src/stubs/java'
+            }
+        }
+    }
 }

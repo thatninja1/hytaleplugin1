@@ -1,0 +1,55 @@
+package com.example.plugin.commands;
+
+import com.example.plugin.economy.EconomyConfig;
+import com.example.plugin.economy.EconomyService;
+import com.example.plugin.economy.formatter.CurrencyFormatter;
+import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.command.system.CommandContext;
+import com.hypixel.hytale.server.core.command.system.arguments.system.OptionalArg;
+import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
+import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+
+import javax.annotation.Nonnull;
+import java.math.BigDecimal;
+import java.util.UUID;
+
+public class BalanceCommand extends CommandBase {
+    private static final String PERMISSION_BALANCE_OTHER = "economy.balance.other";
+
+    @Nonnull
+    private final OptionalArg<PlayerRef> playerArg;
+    private final EconomyService economyService;
+    private final CurrencyFormatter formatter;
+
+    public BalanceCommand(EconomyService economyService, EconomyConfig config) {
+        super("balance", "View your balance or another player's balance", false);
+        this.economyService = economyService;
+        this.formatter = new CurrencyFormatter(config);
+        this.playerArg = this.withOptionalArg("player", "economy.command.balance.player", ArgTypes.PLAYER_REF);
+        this.addAliases("bal");
+    }
+
+    @Override
+    protected void executeSync(@Nonnull CommandContext context) {
+        PlayerRef sender = CommandUtil.requirePlayer(context);
+        if (sender == null) {
+            return;
+        }
+
+        PlayerRef target = (PlayerRef) context.get(this.playerArg);
+        if (target != null && !sender.equals(target)) {
+            if (!CommandUtil.hasPermission(context, PERMISSION_BALANCE_OTHER)) {
+                context.sendMessage(Message.raw("You do not have permission to view other balances."));
+                return;
+            }
+        } else {
+            target = sender;
+        }
+
+        UUID targetId = target.getUuid();
+        economyService.ensureAccount(targetId);
+        BigDecimal balance = economyService.getBalance(targetId);
+        context.sendMessage(Message.raw(target.getDisplayName() + " has " + formatter.format(balance) + "."));
+    }
+}

@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 public class MoneyGiveCommand extends CommandBase {
-    private static final String PERMISSION_ADMIN = "economy.admin";
+    private static final String PERMISSION_ADMIN = "economy.money.give";
 
     @NonNull
     private final RequiredArg<PlayerRef> playerArg;

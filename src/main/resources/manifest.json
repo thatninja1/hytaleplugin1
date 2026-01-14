@@ -6,7 +6,7 @@
   "Entrypoint": "com.example.plugin.EconomyPlugin",
   "Description": "Basic economy plugin with /balance, /pay, /eco, /baltop",
   "Authors": [
-    "ThatNinja"
+    { "Name": "ThatNinja" }
   ],
   "Dependencies": []
 }

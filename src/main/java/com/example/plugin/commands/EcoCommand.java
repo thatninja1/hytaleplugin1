@@ -44,7 +44,7 @@ public class EcoCommand extends AbstractCommand {
 
     @Override
     protected CompletableFuture<Void> execute(@NonNull CommandContext context) {
-        String action = context.getArg(this.actionArg).toLowerCase(Locale.ROOT);
+        String action = ((String) context.getArg(this.actionArg)).toLowerCase(Locale.ROOT);
         String targetName = context.getArg(this.playerArg);
         PlayerRef target = playerLookup.findOnlinePlayer(targetName);
         if (target == null) {

@@ -16,6 +16,7 @@ import java.util.UUID;
 
 public class BalanceCommand extends CommandBase {
     private static final String PERMISSION_BALANCE_OTHER = "economy.balance.other";
+    private static final Object PLAYER_ARG_TYPE = resolvePlayerArgType();
 
     @NonNull
     private final OptionalArg<PlayerRef> playerArg;
@@ -26,7 +27,7 @@ public class BalanceCommand extends CommandBase {
         super("balance", "View your balance or another player's balance", false);
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
-        this.playerArg = this.withOptionalArg("player", "economy.command.balance.player", ArgTypes.PLAYER_REF);
+        this.playerArg = this.withOptionalArg("player", "economy.command.balance.player", PLAYER_ARG_TYPE);
         this.addAliases("bal");
     }
 
@@ -51,5 +52,19 @@ public class BalanceCommand extends CommandBase {
         economyService.ensureAccount(targetId);
         BigDecimal balance = economyService.getBalance(targetId);
         context.sendMessage(Message.raw(target.getDisplayName() + " has " + formatter.format(balance) + "."));
+    }
+
+    private static Object resolvePlayerArgType() {
+        String[] fieldNames = {"PLAYER_REF", "PLAYER", "PLAYERREF", "PLAYER_REFERENCE"};
+        for (String fieldName : fieldNames) {
+            try {
+                return ArgTypes.class.getField(fieldName).get(null);
+            } catch (NoSuchFieldException ignored) {
+                // try next field
+            } catch (IllegalAccessException exception) {
+                throw new IllegalStateException("Unable to access ArgTypes." + fieldName, exception);
+            }
+        }
+        throw new IllegalStateException("No compatible ArgTypes player field found (tried PLAYER_REF, PLAYER, PLAYERREF, PLAYER_REFERENCE).");
     }
 }

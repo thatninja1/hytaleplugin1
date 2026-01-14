@@ -28,8 +28,15 @@ public class MoneySetCommand extends AbstractCommand {
         requirePermission(PERMISSION_ADMIN);
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
-        this.playerArg = this.withRequiredArg("player");
-        this.amountArg = this.withRequiredArg("amount");
+        ArgTypesCompat argTypes = new ArgTypesCompat();
+        Object playerType = argTypes.findPlayerType();
+        Object amountType = argTypes.findDecimalType();
+        this.playerArg = playerType == null
+                ? this.withRequiredArg("player")
+                : this.withRequiredArg("player", playerType);
+        this.amountArg = amountType == null
+                ? this.withRequiredArg("amount")
+                : this.withRequiredArg("amount", amountType);
         this.playerLookup = playerLookup;
     }
 

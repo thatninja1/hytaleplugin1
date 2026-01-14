@@ -35,9 +35,19 @@ public class EcoCommand extends AbstractCommand {
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
         this.logger = logger;
-        this.actionArg = this.withRequiredArg("action");
-        this.playerArg = this.withRequiredArg("player");
-        this.amountArg = this.withRequiredArg("amount");
+        ArgTypesCompat argTypes = new ArgTypesCompat();
+        Object actionType = argTypes.findStringType();
+        Object playerType = argTypes.findPlayerType();
+        Object amountType = argTypes.findDecimalType();
+        this.actionArg = actionType == null
+                ? this.withRequiredArg("action")
+                : this.withRequiredArg("action", actionType);
+        this.playerArg = playerType == null
+                ? this.withRequiredArg("player")
+                : this.withRequiredArg("player", playerType);
+        this.amountArg = amountType == null
+                ? this.withRequiredArg("amount")
+                : this.withRequiredArg("amount", amountType);
         this.playerLookup = playerLookup;
     }
 

@@ -25,7 +25,10 @@ public class BalanceCommand extends AbstractCommand {
         super("balance", "View your balance or another player's balance");
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
-        this.playerArg = this.withOptionalArg("player");
+        Object playerType = new ArgTypesCompat().findPlayerType();
+        this.playerArg = playerType == null
+                ? this.withOptionalArg("player")
+                : this.withOptionalArg("player", playerType);
         this.playerLookup = playerLookup;
         this.addAliases("bal");
     }
@@ -53,7 +56,7 @@ public class BalanceCommand extends AbstractCommand {
             }
         }
         if (target != null && !playerRef.getUuid().equals(target.getUuid())) {
-            if (!context.sender().hasPermission(PERMISSION_BALANCE_OTHER)) {
+            if (!CommandUtil.hasPermission(context, PERMISSION_BALANCE_OTHER)) {
                 context.sender().sendMessage("You do not have permission to view other balances.");
                 return CompletableFuture.completedFuture(null);
             }

@@ -10,14 +10,14 @@ import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 
-import javax.annotation.Nonnull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import java.math.BigDecimal;
 import java.util.UUID;
 
 public class BalanceCommand extends CommandBase {
     private static final String PERMISSION_BALANCE_OTHER = "economy.balance.other";
 
-    @Nonnull
+    @NonNull
     private final OptionalArg<PlayerRef> playerArg;
     private final EconomyService economyService;
     private final CurrencyFormatter formatter;
@@ -31,7 +31,7 @@ public class BalanceCommand extends CommandBase {
     }
 
     @Override
-    protected void executeSync(@Nonnull CommandContext context) {
+    protected void executeSync(@NonNull CommandContext context) {
         PlayerRef sender = CommandUtil.requirePlayer(context);
         if (sender == null) {
             return;

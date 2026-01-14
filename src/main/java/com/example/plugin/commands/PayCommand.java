@@ -10,15 +10,15 @@ import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 
-import javax.annotation.Nonnull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.UUID;
 
 public class PayCommand extends CommandBase {
-    @Nonnull
+    @NonNull
     private final RequiredArg<PlayerRef> playerArg;
-    @Nonnull
+    @NonNull
     private final RequiredArg<String> amountArg;
     private final EconomyService economyService;
     private final CurrencyFormatter formatter;
@@ -32,7 +32,7 @@ public class PayCommand extends CommandBase {
     }
 
     @Override
-    protected void executeSync(@Nonnull CommandContext context) {
+    protected void executeSync(@NonNull CommandContext context) {
         PlayerRef sender = CommandUtil.requirePlayer(context);
         if (sender == null) {
             return;

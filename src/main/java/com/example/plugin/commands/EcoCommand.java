@@ -10,7 +10,7 @@ import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 
-import javax.annotation.Nonnull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Locale;
@@ -20,11 +20,11 @@ import java.util.logging.Logger;
 public class EcoCommand extends CommandBase {
     private static final String PERMISSION_ADMIN = "economy.admin";
 
-    @Nonnull
+    @NonNull
     private final RequiredArg<String> actionArg;
-    @Nonnull
+    @NonNull
     private final RequiredArg<PlayerRef> playerArg;
-    @Nonnull
+    @NonNull
     private final RequiredArg<String> amountArg;
     private final EconomyService economyService;
     private final CurrencyFormatter formatter;
@@ -41,7 +41,7 @@ public class EcoCommand extends CommandBase {
     }
 
     @Override
-    protected void executeSync(@Nonnull CommandContext context) {
+    protected void executeSync(@NonNull CommandContext context) {
         if (!CommandUtil.hasPermission(context, PERMISSION_ADMIN)) {
             context.sendMessage(Message.raw("You do not have permission to use this command."));
             return;

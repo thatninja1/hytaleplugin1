@@ -13,7 +13,7 @@ import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 
-import javax.annotation.Nonnull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -28,7 +28,7 @@ public class EconomyPlugin extends JavaPlugin {
     private EconomyService economyService;
     private ScheduledExecutorService autosaveScheduler;
 
-    public EconomyPlugin(@Nonnull JavaPluginInit init) {
+    public EconomyPlugin(@NonNull JavaPluginInit init) {
         super(init);
     }
 

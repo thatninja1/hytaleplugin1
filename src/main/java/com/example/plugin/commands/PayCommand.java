@@ -27,8 +27,8 @@ public class PayCommand extends CommandBase {
         super("pay", "Pay another player", false);
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
-        this.playerArg = this.withRequiredArg("player", "economy.command.pay.player", ArgTypes.PLAYER_REF);
-        this.amountArg = this.withRequiredArg("amount", "economy.command.pay.amount", ArgTypes.STRING);
+        this.playerArg = this.withRequiredArg("player", ArgTypes.PLAYER);
+        this.amountArg = this.withRequiredArg("amount", ArgTypes.STRING);
     }
 
     @Override

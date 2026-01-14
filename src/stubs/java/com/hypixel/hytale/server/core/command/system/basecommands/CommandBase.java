@@ -22,11 +22,11 @@ public abstract class CommandBase {
         this.requiresPermission = requiresPermission;
     }
 
-    protected <T> RequiredArg<T> withRequiredArg(String name, String key, Object type) {
+    protected <T> RequiredArg<T> withRequiredArg(String name, Object type) {
         return new RequiredArg<>(name);
     }
 
-    protected <T> OptionalArg<T> withOptionalArg(String name, String key, Object type) {
+    protected <T> OptionalArg<T> withOptionalArg(String name, Object type) {
         return new OptionalArg<>(name);
     }
 

@@ -35,9 +35,9 @@ public class EcoCommand extends CommandBase {
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
         this.logger = logger;
-        this.actionArg = this.withRequiredArg("action", "economy.command.eco.action", ArgTypes.STRING);
-        this.playerArg = this.withRequiredArg("player", "economy.command.eco.player", ArgTypes.PLAYER_REF);
-        this.amountArg = this.withRequiredArg("amount", "economy.command.eco.amount", ArgTypes.STRING);
+        this.actionArg = this.withRequiredArg("action", ArgTypes.STRING);
+        this.playerArg = this.withRequiredArg("player", ArgTypes.PLAYER);
+        this.amountArg = this.withRequiredArg("amount", ArgTypes.STRING);
     }
 
     @Override

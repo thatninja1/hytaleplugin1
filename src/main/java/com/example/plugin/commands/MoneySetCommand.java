@@ -16,38 +16,34 @@ public class MoneySetCommand extends AbstractCommand {
     private static final String PERMISSION_ADMIN = "economy.money.set";
 
     @NonNull
-    private final RequiredArg<Object> playerArg;
+    private final RequiredArg<String> playerArg;
     @NonNull
-    private final RequiredArg<Object> amountArg;
+    private final RequiredArg<String> amountArg;
     private final EconomyService economyService;
     private final CurrencyFormatter formatter;
     private final PlayerLookup playerLookup;
-    private final boolean amountArgIsText;
 
     public MoneySetCommand(EconomyService economyService, EconomyConfig config, PlayerLookup playerLookup) {
         super("moneyset", "Set a player's balance");
         requirePermission(PERMISSION_ADMIN);
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
-        ArgTypeResolver resolver = new ArgTypeResolver();
-        this.playerArg = this.withRequiredArg("player", resolver.resolvePlayerType().type());
-        ArgTypeResolver.ArgType amountType = resolver.resolveDecimalType();
-        this.amountArg = this.withRequiredArg("amount", amountType.type());
+        this.playerArg = this.withRequiredArg("player");
+        this.amountArg = this.withRequiredArg("amount");
         this.playerLookup = playerLookup;
-        this.amountArgIsText = amountType.nameBased();
     }
 
     @Override
     protected CompletableFuture<Void> execute(@NonNull CommandContext context) {
-        Object targetValue = context.getArg(this.playerArg);
-        PlayerRef target = CommandUtil.resolvePlayer(targetValue, playerLookup);
+        String targetName = context.getArg(this.playerArg);
+        PlayerRef target = playerLookup.findOnlinePlayer(targetName);
         if (target == null) {
-            context.sender().sendMessage("That player could not be found.");
+            context.sender().sendMessage("Player not found.");
             return CompletableFuture.completedFuture(null);
         }
         economyService.updatePlayerName(target.getUuid(), target.getDisplayName());
 
-        BigDecimal amount = toBigDecimal(context.getArg(this.amountArg));
+        BigDecimal amount = parseAmount(context.getArg(this.amountArg), context);
         if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0) {
             context.sender().sendMessage("Amount cannot be negative.");
             return CompletableFuture.completedFuture(null);
@@ -63,20 +59,12 @@ public class MoneySetCommand extends AbstractCommand {
         return CompletableFuture.completedFuture(null);
     }
 
-    private BigDecimal toBigDecimal(Object value) {
-        if (value instanceof BigDecimal bigDecimal) {
-            return bigDecimal;
+    private BigDecimal parseAmount(String value, CommandContext context) {
+        try {
+            return new BigDecimal(value);
+        } catch (NumberFormatException exception) {
+            context.sender().sendMessage("Invalid amount.");
+            return null;
         }
-        if (value instanceof Number number) {
-            return BigDecimal.valueOf(number.doubleValue());
-        }
-        if (amountArgIsText && value instanceof String text) {
-            try {
-                return new BigDecimal(text);
-            } catch (NumberFormatException ignored) {
-                return null;
-            }
-        }
-        return null;
     }
 }

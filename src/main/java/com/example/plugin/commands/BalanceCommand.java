@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 public class BalanceCommand extends AbstractCommand {
     private static final String PERMISSION_BALANCE_OTHER = "economy.balance.other";
     @NonNull
-    private final OptionalArg<Object> playerArg;
+    private final OptionalArg<String> playerArg;
     private final EconomyService economyService;
     private final CurrencyFormatter formatter;
     private final PlayerLookup playerLookup;
@@ -25,8 +25,7 @@ public class BalanceCommand extends AbstractCommand {
         super("balance", "View your balance or another player's balance");
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
-        ArgTypeResolver.ArgType playerType = new ArgTypeResolver().resolvePlayerType();
-        this.playerArg = this.withOptionalArg("player", playerType.type());
+        this.playerArg = this.withOptionalArg("player");
         this.playerLookup = playerLookup;
         this.addAliases("bal");
     }
@@ -39,11 +38,14 @@ public class BalanceCommand extends AbstractCommand {
         }
         economyService.updatePlayerName(playerRef.getUuid(), playerRef.getDisplayName());
 
-        Object targetValue = context.getArgOrNull(this.playerArg);
-        PlayerRef target = CommandUtil.resolvePlayer(targetValue, playerLookup);
-        if (target == null && targetValue != null) {
-            context.sender().sendMessage("That player could not be found.");
-            return CompletableFuture.completedFuture(null);
+        String targetName = context.getArgOrNull(this.playerArg);
+        PlayerRef target = null;
+        if (targetName != null && !targetName.isBlank()) {
+            target = playerLookup.findOnlinePlayer(targetName);
+            if (target == null) {
+                context.sender().sendMessage("Player not found.");
+                return CompletableFuture.completedFuture(null);
+            }
         }
         if (target != null && !playerRef.getUuid().equals(target.getUuid())) {
             if (!context.sender().hasPermission(PERMISSION_BALANCE_OTHER)) {

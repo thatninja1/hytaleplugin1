@@ -19,16 +19,15 @@ public class EcoCommand extends AbstractCommand {
     private static final String PERMISSION_ADMIN = "economy.admin";
 
     @NonNull
-    private final RequiredArg<Object> actionArg;
+    private final RequiredArg<String> actionArg;
     @NonNull
-    private final RequiredArg<Object> playerArg;
+    private final RequiredArg<String> playerArg;
     @NonNull
-    private final RequiredArg<Object> amountArg;
+    private final RequiredArg<String> amountArg;
     private final EconomyService economyService;
     private final CurrencyFormatter formatter;
     private final Logger logger;
     private final PlayerLookup playerLookup;
-    private final boolean amountArgIsText;
 
     public EcoCommand(EconomyService economyService, EconomyConfig config, Logger logger, PlayerLookup playerLookup) {
         super("eco", "Admin economy commands");
@@ -36,26 +35,23 @@ public class EcoCommand extends AbstractCommand {
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
         this.logger = logger;
-        ArgTypeResolver resolver = new ArgTypeResolver();
-        this.actionArg = this.withRequiredArg("action", resolver.resolveTextType().type());
-        this.playerArg = this.withRequiredArg("player", resolver.resolvePlayerType().type());
-        ArgTypeResolver.ArgType amountType = resolver.resolveDecimalType();
-        this.amountArg = this.withRequiredArg("amount", amountType.type());
+        this.actionArg = this.withRequiredArg("action");
+        this.playerArg = this.withRequiredArg("player");
+        this.amountArg = this.withRequiredArg("amount");
         this.playerLookup = playerLookup;
-        this.amountArgIsText = amountType.nameBased();
     }
 
     @Override
     protected CompletableFuture<Void> execute(@NonNull CommandContext context) {
-        String action = ((String) context.getArg(this.actionArg)).toLowerCase(Locale.ROOT);
-        Object targetValue = context.getArg(this.playerArg);
-        PlayerRef target = CommandUtil.resolvePlayer(targetValue, playerLookup);
+        String action = context.getArg(this.actionArg).toLowerCase(Locale.ROOT);
+        String targetName = context.getArg(this.playerArg);
+        PlayerRef target = playerLookup.findOnlinePlayer(targetName);
         if (target == null) {
-            context.sender().sendMessage("That player could not be found.");
+            context.sender().sendMessage("Player not found.");
             return CompletableFuture.completedFuture(null);
         }
         economyService.updatePlayerName(target.getUuid(), target.getDisplayName());
-        BigDecimal amount = toBigDecimal(context.getArg(this.amountArg));
+        BigDecimal amount = parseAmount(context.getArg(this.amountArg), context);
         if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0) {
             context.sender().sendMessage("Amount cannot be negative.");
             return CompletableFuture.completedFuture(null);
@@ -94,20 +90,12 @@ public class EcoCommand extends AbstractCommand {
         return CompletableFuture.completedFuture(null);
     }
 
-    private BigDecimal toBigDecimal(Object value) {
-        if (value instanceof BigDecimal bigDecimal) {
-            return bigDecimal;
+    private BigDecimal parseAmount(String value, CommandContext context) {
+        try {
+            return new BigDecimal(value);
+        } catch (NumberFormatException exception) {
+            context.sender().sendMessage("Invalid amount.");
+            return null;
         }
-        if (value instanceof Number number) {
-            return BigDecimal.valueOf(number.doubleValue());
-        }
-        if (amountArgIsText && value instanceof String text) {
-            try {
-                return new BigDecimal(text);
-            } catch (NumberFormatException ignored) {
-                return null;
-            }
-        }
-        return null;
     }
 }

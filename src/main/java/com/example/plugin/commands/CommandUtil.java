@@ -25,23 +25,6 @@ public final class CommandUtil {
         return null;
     }
 
-    @Nullable
-    public static PlayerRef resolvePlayer(Object argValue, PlayerLookup playerLookup) {
-        if (argValue == null) {
-            return null;
-        }
-        if (argValue instanceof PlayerRef playerRef) {
-            return playerRef;
-        }
-        if (argValue instanceof Player player) {
-            return player.getReference();
-        }
-        if (argValue instanceof String name && !name.isBlank()) {
-            return playerLookup.findOnlinePlayer(name);
-        }
-        return null;
-    }
-
     public static boolean hasPermission(CommandContext context, String permission) {
         CommandSender sender = context.sender();
         return sender.hasPermission(permission);

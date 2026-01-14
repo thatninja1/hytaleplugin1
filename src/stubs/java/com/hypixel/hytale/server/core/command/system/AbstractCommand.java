@@ -28,8 +28,16 @@ public abstract class AbstractCommand {
         // no-op stub
     }
 
+    protected <T> RequiredArg<T> withRequiredArg(String name) {
+        return new RequiredArg<>(name);
+    }
+
     protected <T> RequiredArg<T> withRequiredArg(String name, Object type) {
         return new RequiredArg<>(name);
+    }
+
+    protected <T> OptionalArg<T> withOptionalArg(String name) {
+        return new OptionalArg<>(name);
     }
 
     protected <T> OptionalArg<T> withOptionalArg(String name, Object type) {

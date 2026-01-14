@@ -14,11 +14,13 @@ final class CommandArgResolver {
     }
 
     static Object playerArgType() {
-        return resolveArgType("PLAYER", "PLAYER_REF", "PLAYERREF", "PLAYER_REFERENCE");
+        return resolveArgType(new String[]{"PLAYER", "PLAYER_REF", "PLAYERREF", "PLAYER_REFERENCE"},
+                new String[]{"player", "playerRef", "playerReference"});
     }
 
     static Object stringArgType() {
-        return resolveArgType("STRING", "TEXT");
+        return resolveArgType(new String[]{"STRING", "TEXT"},
+                new String[]{"string", "text"});
     }
 
     @SuppressWarnings("unchecked")
@@ -53,7 +55,19 @@ final class CommandArgResolver {
         }
     }
 
-    private static Object resolveArgType(String... fieldNames) {
+    private static Object resolveArgType(String[] fieldNames, String[] methodNames) {
+        for (String methodName : methodNames) {
+            try {
+                Method method = ArgTypes.class.getMethod(methodName);
+                if (Modifier.isStatic(method.getModifiers()) && method.getParameterCount() == 0) {
+                    return method.invoke(null);
+                }
+            } catch (NoSuchMethodException ignored) {
+                // try next method
+            } catch (ReflectiveOperationException exception) {
+                throw new IllegalStateException("Unable to invoke ArgTypes." + methodName + "()", exception);
+            }
+        }
         for (String fieldName : fieldNames) {
             try {
                 return ArgTypes.class.getField(fieldName).get(null);
@@ -63,6 +77,6 @@ final class CommandArgResolver {
                 throw new IllegalStateException("Unable to access ArgTypes." + fieldName, exception);
             }
         }
-        throw new IllegalStateException("No compatible ArgTypes field found for " + String.join(", ", fieldNames) + ".");
+        throw new IllegalStateException("No compatible ArgTypes member found for " + String.join(", ", fieldNames) + ".");
     }
 }

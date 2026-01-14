@@ -9,38 +9,21 @@ import java.util.Map;
  * Stubbed command context for CI compilation only.
  */
 public class CommandContext {
-    private final Object sender;
+    private final CommandSender sender;
     private final Map<Object, Object> args = new HashMap<>();
 
-    public CommandContext(Object sender) {
+    public CommandContext(CommandSender sender) {
         this.sender = sender;
     }
 
-    public Object sender() {
+    public CommandSender sender() {
         return sender;
-    }
-
-    public com.hypixel.hytale.server.core.universe.PlayerRef senderAsPlayerRef() {
-        if (sender instanceof com.hypixel.hytale.server.core.universe.PlayerRef playerRef) {
-            return playerRef;
-        }
-        return null;
     }
 
     public void sendMessage(Message message) {
         // no-op stub
     }
 
-    public com.hypixel.hytale.server.core.entity.entities.Player senderAsPlayer() {
-        if (sender instanceof com.hypixel.hytale.server.core.entity.entities.Player player) {
-            return player;
-        }
-        return null;
-    }
-
-    public boolean hasPermission(String permission) {
-        return false;
-    }
 
     @SuppressWarnings("unchecked")
     public <T> T get(Object arg) {

@@ -56,13 +56,13 @@ public class EconomyPlugin extends JavaPlugin {
     }
 
     private void registerCommands(EconomyConfig config) {
-        Object registry = this.getCommandRegistry();
-        registerCommand(registry, new BalanceCommand(economyService, config));
-        registerCommand(registry, new BaltopCommand(economyService, config));
-        registerCommand(registry, new PayCommand(economyService, config));
-        registerCommand(registry, new EcoCommand(economyService, config, LOGGER));
-        registerCommand(registry, new MoneyGiveCommand(economyService, config));
-        registerCommand(registry, new MoneySetCommand(economyService, config));
+        var registry = this.getCommandRegistry();
+        registry.register(new BalanceCommand(economyService, config));
+        registry.register(new BaltopCommand(economyService, config));
+        registry.register(new PayCommand(economyService, config));
+        registry.register(new EcoCommand(economyService, config, LOGGER));
+        registry.register(new MoneyGiveCommand(economyService, config));
+        registry.register(new MoneySetCommand(economyService, config));
     }
 
     private void registerEvents() {
@@ -89,27 +89,6 @@ public class EconomyPlugin extends JavaPlugin {
                 autosaveInterval,
                 TimeUnit.SECONDS);
         LOGGER.info("Economy autosave scheduled every " + Duration.ofSeconds(autosaveInterval) + ".");
-    }
-
-    private void registerCommand(Object registry, Object command) {
-        String[] methodNames = {"registerCommand", "register", "addCommand"};
-        for (String methodName : methodNames) {
-            try {
-                var method = Arrays.stream(registry.getClass().getMethods())
-                        .filter(candidate -> candidate.getName().equals(methodName))
-                        .filter(candidate -> candidate.getParameterCount() == 1)
-                        .filter(candidate -> candidate.getParameterTypes()[0].isAssignableFrom(command.getClass()))
-                        .findFirst()
-                        .orElse(null);
-                if (method != null) {
-                    method.invoke(registry, command);
-                    return;
-                }
-            } catch (ReflectiveOperationException exception) {
-                throw new IllegalStateException("Failed to register command via " + methodName + ".", exception);
-            }
-        }
-        throw new IllegalStateException("No compatible CommandRegistry registration method found.");
     }
 
     private Object resolveEventRegistry() {

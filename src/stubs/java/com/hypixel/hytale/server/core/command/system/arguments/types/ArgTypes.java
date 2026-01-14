@@ -5,6 +5,7 @@ package com.hypixel.hytale.server.core.command.system.arguments.types;
  */
 public final class ArgTypes {
     public static final Object PLAYER = new Object();
+    public static final Object DECIMAL = new Object();
     public static final Object STRING = new Object();
 
     private ArgTypes() {

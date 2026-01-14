@@ -3,17 +3,18 @@ package com.example.plugin.commands;
 import com.example.plugin.economy.EconomyConfig;
 import com.example.plugin.economy.EconomyService;
 import com.example.plugin.economy.formatter.CurrencyFormatter;
-import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.OptionalArg;
-import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
+import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import java.math.BigDecimal;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
-public class BalanceCommand extends CommandBase {
+public class BalanceCommand extends AbstractCommand {
     private static final String PERMISSION_BALANCE_OTHER = "economy.balance.other";
     @NonNull
     private final OptionalArg<PlayerRef> playerArg;
@@ -21,37 +22,38 @@ public class BalanceCommand extends CommandBase {
     private final CurrencyFormatter formatter;
 
     public BalanceCommand(EconomyService economyService, EconomyConfig config) {
-        super("balance", "View your balance or another player's balance", false);
+        super("balance", "View your balance or another player's balance");
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
-        this.playerArg = CommandArgResolver.optionalArg(this, "player", "economy.command.balance.player",
-                CommandArgResolver.playerArgType());
+        this.playerArg = this.withOptionalArg("player", ArgTypes.PLAYER);
         this.addAliases("bal");
     }
 
     @Override
-    protected void executeSync(@NonNull CommandContext context) {
-        PlayerRef sender = CommandUtil.requirePlayer(context);
-        if (sender == null) {
-            return;
+    protected CompletableFuture<Void> execute(@NonNull CommandContext context) {
+        Object sender = context.sender();
+        if (!(sender instanceof PlayerRef playerRef)) {
+            context.sender().sendMessage("This command can only be used by players.");
+            return CompletableFuture.completedFuture(null);
         }
-        economyService.updatePlayerName(sender.getUuid(), sender.getDisplayName());
+        economyService.updatePlayerName(playerRef.getUuid(), playerRef.getDisplayName());
 
-        PlayerRef target = (PlayerRef) context.get(this.playerArg);
-        if (target != null && !sender.equals(target)) {
-            if (!CommandUtil.hasPermission(context, PERMISSION_BALANCE_OTHER)) {
-                context.sendMessage(Message.raw("You do not have permission to view other balances."));
-                return;
+        PlayerRef target = context.get(this.playerArg);
+        if (target != null && !playerRef.equals(target)) {
+            if (!context.sender().hasPermission(PERMISSION_BALANCE_OTHER)) {
+                context.sender().sendMessage("You do not have permission to view other balances.");
+                return CompletableFuture.completedFuture(null);
             }
             economyService.updatePlayerName(target.getUuid(), target.getDisplayName());
         } else {
-            target = sender;
+            target = playerRef;
         }
 
         UUID targetId = target.getUuid();
         economyService.ensureAccount(targetId);
         BigDecimal balance = economyService.getBalance(targetId);
-        context.sendMessage(Message.raw(target.getDisplayName() + " has " + formatter.format(balance) + "."));
+        context.sender().sendMessage(target.getDisplayName() + " has " + formatter.format(balance) + ".");
+        return CompletableFuture.completedFuture(null);
     }
 
 }

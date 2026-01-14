@@ -6,7 +6,6 @@ import com.example.plugin.economy.formatter.CurrencyFormatter;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.OptionalArg;
-import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 
@@ -25,7 +24,8 @@ public class BalanceCommand extends CommandBase {
         super("balance", "View your balance or another player's balance", false);
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
-        this.playerArg = this.withOptionalArg("player", ArgTypes.PLAYER);
+        this.playerArg = CommandArgResolver.optionalArg(this, "player", "economy.command.balance.player",
+                CommandArgResolver.playerArgType());
         this.addAliases("bal");
     }
 

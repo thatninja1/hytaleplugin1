@@ -6,7 +6,6 @@ import com.example.plugin.economy.formatter.CurrencyFormatter;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
-import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 
@@ -35,9 +34,12 @@ public class EcoCommand extends CommandBase {
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
         this.logger = logger;
-        this.actionArg = this.withRequiredArg("action", ArgTypes.STRING);
-        this.playerArg = this.withRequiredArg("player", ArgTypes.PLAYER);
-        this.amountArg = this.withRequiredArg("amount", ArgTypes.STRING);
+        this.actionArg = CommandArgResolver.requiredArg(this, "action", "economy.command.eco.action",
+                CommandArgResolver.stringArgType());
+        this.playerArg = CommandArgResolver.requiredArg(this, "player", "economy.command.eco.player",
+                CommandArgResolver.playerArgType());
+        this.amountArg = CommandArgResolver.requiredArg(this, "amount", "economy.command.eco.amount",
+                CommandArgResolver.stringArgType());
     }
 
     @Override

@@ -8,8 +8,6 @@ import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import java.math.BigDecimal;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -29,14 +27,14 @@ public class BaltopCommand extends CommandBase {
 
     @Override
     protected void executeSync(@NonNull CommandContext context) {
-        Map<UUID, BigDecimal> snapshot = economyService.getBalancesSnapshot();
+        Map<UUID, com.example.plugin.economy.BalanceEntry> snapshot = economyService.getBalancesSnapshot();
         if (snapshot.isEmpty()) {
             context.sendMessage(Message.raw("No balances have been recorded yet."));
             return;
         }
 
-        Map<UUID, BigDecimal> topBalances = snapshot.entrySet().stream()
-                .sorted(Map.Entry.<UUID, BigDecimal>comparingByValue(Comparator.reverseOrder()))
+        Map<UUID, com.example.plugin.economy.BalanceEntry> topBalances = snapshot.entrySet().stream()
+                .sorted((left, right) -> right.getValue().balance().compareTo(left.getValue().balance()))
                 .limit(DEFAULT_LIMIT)
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
@@ -46,9 +44,17 @@ public class BaltopCommand extends CommandBase {
 
         context.sendMessage(Message.raw("Top " + topBalances.size() + " balances:"));
         int index = 1;
-        for (Map.Entry<UUID, BigDecimal> entry : topBalances.entrySet()) {
-            context.sendMessage(Message.raw(index + ". " + entry.getKey() + " - " + formatter.format(entry.getValue())));
+        for (Map.Entry<UUID, com.example.plugin.economy.BalanceEntry> entry : topBalances.entrySet()) {
+            String displayName = resolveDisplayName(entry.getKey(), entry.getValue());
+            context.sendMessage(Message.raw(index + ". " + displayName + " - " + formatter.format(entry.getValue().balance())));
             index++;
         }
+    }
+
+    private String resolveDisplayName(UUID uuid, com.example.plugin.economy.BalanceEntry entry) {
+        if (entry != null && entry.lastKnownName() != null && !entry.lastKnownName().isBlank()) {
+            return entry.lastKnownName();
+        }
+        return uuid.toString();
     }
 }

@@ -35,6 +35,7 @@ public class BalanceCommand extends CommandBase {
         if (sender == null) {
             return;
         }
+        economyService.updatePlayerName(sender.getUuid(), sender.getDisplayName());
 
         PlayerRef target = (PlayerRef) context.get(this.playerArg);
         if (target != null && !sender.equals(target)) {
@@ -42,6 +43,7 @@ public class BalanceCommand extends CommandBase {
                 context.sendMessage(Message.raw("You do not have permission to view other balances."));
                 return;
             }
+            economyService.updatePlayerName(target.getUuid(), target.getDisplayName());
         } else {
             target = sender;
         }

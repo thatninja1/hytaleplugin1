@@ -18,7 +18,7 @@ public class EconomyService {
     private final StorageProvider storageProvider;
     private final BigDecimal startingBalance;
     private final Logger logger;
-    private final Map<UUID, BigDecimal> balances;
+    private final Map<UUID, BalanceEntry> balances;
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     /**
@@ -36,7 +36,7 @@ public class EconomyService {
      * Loads balances from persistent storage into memory.
      */
     public void loadBalances() {
-        Map<UUID, BigDecimal> loadedBalances = storageProvider.loadBalances();
+        Map<UUID, BalanceEntry> loadedBalances = storageProvider.loadBalances();
         lock.writeLock().lock();
         try {
             balances.clear();
@@ -67,7 +67,8 @@ public class EconomyService {
     public BigDecimal getBalance(UUID playerId) {
         lock.readLock().lock();
         try {
-            return balances.getOrDefault(playerId, startingBalance);
+            BalanceEntry entry = balances.get(playerId);
+            return entry == null ? startingBalance : entry.balance();
         } finally {
             lock.readLock().unlock();
         }
@@ -76,7 +77,7 @@ public class EconomyService {
     /**
      * Returns a snapshot of all balances for read-only operations.
      */
-    public Map<UUID, BigDecimal> getBalancesSnapshot() {
+    public Map<UUID, BalanceEntry> getBalancesSnapshot() {
         lock.readLock().lock();
         try {
             return Map.copyOf(balances);
@@ -91,7 +92,44 @@ public class EconomyService {
     public void ensureAccount(UUID playerId) {
         lock.writeLock().lock();
         try {
-            balances.computeIfAbsent(playerId, ignored -> startingBalance);
+            balances.computeIfAbsent(playerId, ignored -> new BalanceEntry(startingBalance, null));
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Ensures a player has an account and stores the latest name if provided.
+     */
+    public void ensureAccount(UUID playerId, String lastKnownName) {
+        lock.writeLock().lock();
+        try {
+            BalanceEntry existing = balances.get(playerId);
+            if (existing == null) {
+                balances.put(playerId, new BalanceEntry(startingBalance, normalizeName(lastKnownName)));
+                return;
+            }
+            updateNameIfPresent(playerId, existing, lastKnownName);
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Updates the stored last known name for a player if available.
+     */
+    public void updatePlayerName(UUID playerId, String lastKnownName) {
+        if (normalizeName(lastKnownName) == null) {
+            return;
+        }
+        lock.writeLock().lock();
+        try {
+            BalanceEntry existing = balances.get(playerId);
+            if (existing == null) {
+                balances.put(playerId, new BalanceEntry(startingBalance, normalizeName(lastKnownName)));
+                return;
+            }
+            updateNameIfPresent(playerId, existing, lastKnownName);
         } finally {
             lock.writeLock().unlock();
         }
@@ -104,9 +142,9 @@ public class EconomyService {
         validateAmount(amount);
         lock.writeLock().lock();
         try {
-            BigDecimal balance = balances.getOrDefault(playerId, startingBalance);
-            BigDecimal updated = balance.add(amount);
-            balances.put(playerId, updated);
+            BalanceEntry entry = balances.getOrDefault(playerId, new BalanceEntry(startingBalance, null));
+            BigDecimal updated = entry.balance().add(amount);
+            balances.put(playerId, new BalanceEntry(updated, entry.lastKnownName()));
             return updated;
         } finally {
             lock.writeLock().unlock();
@@ -120,12 +158,13 @@ public class EconomyService {
         validateAmount(amount);
         lock.writeLock().lock();
         try {
-            BigDecimal balance = balances.getOrDefault(playerId, startingBalance);
+            BalanceEntry entry = balances.getOrDefault(playerId, new BalanceEntry(startingBalance, null));
+            BigDecimal balance = entry.balance();
             if (balance.compareTo(amount) < 0) {
                 return new WithdrawalResult(false, balance);
             }
             BigDecimal updated = balance.subtract(amount);
-            balances.put(playerId, updated);
+            balances.put(playerId, new BalanceEntry(updated, entry.lastKnownName()));
             return new WithdrawalResult(true, updated);
         } finally {
             lock.writeLock().unlock();
@@ -141,7 +180,8 @@ public class EconomyService {
         }
         lock.writeLock().lock();
         try {
-            balances.put(playerId, amount);
+            BalanceEntry entry = balances.getOrDefault(playerId, new BalanceEntry(startingBalance, null));
+            balances.put(playerId, new BalanceEntry(amount, entry.lastKnownName()));
             return amount;
         } finally {
             lock.writeLock().unlock();
@@ -158,17 +198,33 @@ public class EconomyService {
         }
         lock.writeLock().lock();
         try {
-            BigDecimal senderBalance = balances.getOrDefault(senderId, startingBalance);
+            BalanceEntry senderEntry = balances.getOrDefault(senderId, new BalanceEntry(startingBalance, null));
+            BalanceEntry targetEntry = balances.getOrDefault(targetId, new BalanceEntry(startingBalance, null));
+            BigDecimal senderBalance = senderEntry.balance();
             if (senderBalance.compareTo(amount) < 0) {
                 return new TransferResult(false, "You do not have enough funds.", senderBalance, null);
             }
-            BigDecimal targetBalance = balances.getOrDefault(targetId, startingBalance).add(amount);
-            balances.put(senderId, senderBalance.subtract(amount));
-            balances.put(targetId, targetBalance);
+            BigDecimal targetBalance = targetEntry.balance().add(amount);
+            balances.put(senderId, new BalanceEntry(senderBalance.subtract(amount), senderEntry.lastKnownName()));
+            balances.put(targetId, new BalanceEntry(targetBalance, targetEntry.lastKnownName()));
             return new TransferResult(true, "Payment sent.", senderBalance.subtract(amount), targetBalance);
         } finally {
             lock.writeLock().unlock();
         }
+    }
+
+    private void updateNameIfPresent(UUID playerId, BalanceEntry existing, String lastKnownName) {
+        String normalized = normalizeName(lastKnownName);
+        if (normalized != null && !normalized.equals(existing.lastKnownName())) {
+            balances.put(playerId, new BalanceEntry(existing.balance(), normalized));
+        }
+    }
+
+    private String normalizeName(String name) {
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+        return name.trim();
     }
 
     private void validateAmount(BigDecimal amount) {

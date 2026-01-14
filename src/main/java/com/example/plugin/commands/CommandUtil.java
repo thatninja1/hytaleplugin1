@@ -32,6 +32,25 @@ public final class CommandUtil {
         if (sender == null) {
             return false;
         }
-        return sender.hasPermission(permission);
+        if (sender.hasPermission(permission)) {
+            return true;
+        }
+        try {
+            Object isOperator = sender.getClass().getMethod("isOperator").invoke(sender);
+            if (isOperator instanceof Boolean value && value) {
+                return true;
+            }
+        } catch (ReflectiveOperationException ignored) {
+            // ignore
+        }
+        try {
+            Object isOp = sender.getClass().getMethod("isOp").invoke(sender);
+            if (isOp instanceof Boolean value && value) {
+                return true;
+            }
+        } catch (ReflectiveOperationException ignored) {
+            // ignore
+        }
+        return false;
     }
 }

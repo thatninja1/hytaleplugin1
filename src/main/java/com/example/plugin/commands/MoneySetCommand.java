@@ -45,6 +45,7 @@ public class MoneySetCommand extends CommandBase {
             context.sendMessage(Message.raw("That player could not be found."));
             return;
         }
+        economyService.updatePlayerName(target.getUuid(), target.getDisplayName());
 
         BigDecimal amount = parseAmount((String) context.get(this.amountArg), context);
         if (amount == null) {

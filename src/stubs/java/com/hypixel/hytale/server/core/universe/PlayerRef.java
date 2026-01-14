@@ -31,4 +31,12 @@ public class PlayerRef {
     public boolean hasPermission(String permission) {
         return false;
     }
+
+    public boolean isOperator() {
+        return false;
+    }
+
+    public boolean isOp() {
+        return false;
+    }
 }

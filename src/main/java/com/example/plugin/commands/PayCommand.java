@@ -38,12 +38,14 @@ public class PayCommand extends CommandBase {
         if (sender == null) {
             return;
         }
+        economyService.updatePlayerName(sender.getUuid(), sender.getDisplayName());
 
         PlayerRef target = (PlayerRef) context.get(this.playerArg);
         if (target == null) {
             context.sendMessage(Message.raw("That player could not be found."));
             return;
         }
+        economyService.updatePlayerName(target.getUuid(), target.getDisplayName());
         BigDecimal amount = parseAmount((String) context.get(this.amountArg), context);
         if (amount == null) {
             return;

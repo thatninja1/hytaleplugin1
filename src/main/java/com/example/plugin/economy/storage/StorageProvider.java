@@ -1,6 +1,7 @@
 package com.example.plugin.economy.storage;
 
-import java.math.BigDecimal;
+import com.example.plugin.economy.BalanceEntry;
+
 import java.util.Map;
 import java.util.UUID;
 
@@ -11,10 +12,10 @@ public interface StorageProvider {
     /**
      * Loads balances from persistent storage.
      */
-    Map<UUID, BigDecimal> loadBalances();
+    Map<UUID, BalanceEntry> loadBalances();
 
     /**
      * Saves balances to persistent storage.
      */
-    void saveBalances(Map<UUID, BigDecimal> balances);
+    void saveBalances(Map<UUID, BalanceEntry> balances);
 }

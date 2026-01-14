@@ -11,6 +11,6 @@ public class PlayerReadyListener {
     public static void onPlayerReady(PlayerReadyEvent event, EconomyService economyService) {
         Player player = event.getPlayer();
         UUID playerId = player.getUuid();
-        economyService.ensureAccount(playerId);
+        economyService.ensureAccount(playerId, player.getDisplayName());
     }
 }

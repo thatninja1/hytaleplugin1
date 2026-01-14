@@ -6,7 +6,6 @@ import com.example.plugin.economy.formatter.CurrencyFormatter;
 import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
-import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -16,20 +15,24 @@ import java.util.concurrent.CompletableFuture;
 
 public class PayCommand extends AbstractCommand {
     @NonNull
-    private final RequiredArg<String> playerArg;
+    private final RequiredArg<Object> playerArg;
     @NonNull
-    private final RequiredArg<BigDecimal> amountArg;
+    private final RequiredArg<Object> amountArg;
     private final EconomyService economyService;
     private final CurrencyFormatter formatter;
     private final PlayerLookup playerLookup;
+    private final boolean amountArgIsText;
 
     public PayCommand(EconomyService economyService, EconomyConfig config, PlayerLookup playerLookup) {
         super("pay", "Pay another player");
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
-        this.playerArg = this.withRequiredArg("player", ArgTypes.STRING);
-        this.amountArg = this.withRequiredArg("amount", ArgTypes.DECIMAL);
+        ArgTypeResolver resolver = new ArgTypeResolver();
+        this.playerArg = this.withRequiredArg("player", resolver.resolvePlayerType().type());
+        ArgTypeResolver.ArgType amountType = resolver.resolveDecimalType();
+        this.amountArg = this.withRequiredArg("amount", amountType.type());
         this.playerLookup = playerLookup;
+        this.amountArgIsText = amountType.nameBased();
     }
 
     @Override
@@ -40,8 +43,8 @@ public class PayCommand extends AbstractCommand {
         }
         economyService.updatePlayerName(senderRef.getUuid(), senderRef.getDisplayName());
 
-        String targetName = context.getArg(this.playerArg);
-        PlayerRef target = playerLookup.findOnlinePlayer(targetName);
+        Object targetValue = context.getArg(this.playerArg);
+        PlayerRef target = CommandUtil.resolvePlayer(targetValue, playerLookup);
         if (target == null) {
             context.sender().sendMessage("That player could not be found.");
             return CompletableFuture.completedFuture(null);
@@ -78,6 +81,13 @@ public class PayCommand extends AbstractCommand {
         }
         if (value instanceof Number number) {
             return BigDecimal.valueOf(number.doubleValue());
+        }
+        if (amountArgIsText && value instanceof String text) {
+            try {
+                return new BigDecimal(text);
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
         }
         return null;
     }

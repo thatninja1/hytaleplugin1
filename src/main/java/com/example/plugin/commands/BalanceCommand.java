@@ -6,7 +6,6 @@ import com.example.plugin.economy.formatter.CurrencyFormatter;
 import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.OptionalArg;
-import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -17,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 public class BalanceCommand extends AbstractCommand {
     private static final String PERMISSION_BALANCE_OTHER = "economy.balance.other";
     @NonNull
-    private final OptionalArg<String> playerArg;
+    private final OptionalArg<Object> playerArg;
     private final EconomyService economyService;
     private final CurrencyFormatter formatter;
     private final PlayerLookup playerLookup;
@@ -26,7 +25,8 @@ public class BalanceCommand extends AbstractCommand {
         super("balance", "View your balance or another player's balance");
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
-        this.playerArg = this.withOptionalArg("player", ArgTypes.STRING);
+        ArgTypeResolver.ArgType playerType = new ArgTypeResolver().resolvePlayerType();
+        this.playerArg = this.withOptionalArg("player", playerType.type());
         this.playerLookup = playerLookup;
         this.addAliases("bal");
     }
@@ -39,14 +39,11 @@ public class BalanceCommand extends AbstractCommand {
         }
         economyService.updatePlayerName(playerRef.getUuid(), playerRef.getDisplayName());
 
-        String targetName = context.getArgOrNull(this.playerArg);
-        PlayerRef target = null;
-        if (targetName != null && !targetName.isBlank()) {
-            target = playerLookup.findOnlinePlayer(targetName);
-            if (target == null) {
-                context.sender().sendMessage("That player could not be found.");
-                return CompletableFuture.completedFuture(null);
-            }
+        Object targetValue = context.getArgOrNull(this.playerArg);
+        PlayerRef target = CommandUtil.resolvePlayer(targetValue, playerLookup);
+        if (target == null && targetValue != null) {
+            context.sender().sendMessage("That player could not be found.");
+            return CompletableFuture.completedFuture(null);
         }
         if (target != null && !playerRef.getUuid().equals(target.getUuid())) {
             if (!context.sender().hasPermission(PERMISSION_BALANCE_OTHER)) {

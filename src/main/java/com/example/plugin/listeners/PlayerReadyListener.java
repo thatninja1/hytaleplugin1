@@ -1,14 +1,16 @@
 package com.example.plugin.listeners;
 
-import com.hypixel.hytale.server.core.Message;
+import com.example.plugin.economy.EconomyService;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 
+import java.util.UUID;
+
 public class PlayerReadyListener {
 
-    public static void onPlayerReady(PlayerReadyEvent event) {
+    public static void onPlayerReady(PlayerReadyEvent event, EconomyService economyService) {
         Player player = event.getPlayer();
-        player.sendMessage(Message.raw("Welcome " + player.getDisplayName()));
+        UUID playerId = player.getUuid();
+        economyService.ensureAccount(playerId, player.getDisplayName());
     }
-
 }

@@ -20,11 +20,13 @@ java {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    options.release = 25
 }
 
 dependencies {
     // Libraries
     compileOnly name: 'HytaleServer'
+    implementation 'com.google.code.gson:gson:2.11.0'
     
     // Tests
     testImplementation platform('org.junit:junit-bom:5.10.0')

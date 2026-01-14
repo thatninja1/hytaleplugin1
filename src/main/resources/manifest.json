@@ -3,10 +3,5 @@
   "Name": "EconomyPlugin",
   "Version": "1.0.0",
   "Type": "plugin",
-  "Entrypoint": "com.example.plugin.EconomyPlugin",
-  "Description": "Basic economy plugin with /balance, /pay, /eco, /baltop",
-  "Authors": [
-    { "Name": "ThatNinja" }
-  ],
-  "Dependencies": []
+  "Entrypoint": "com.example.economy.EconomyPlugin"
 }

@@ -1,7 +1,10 @@
 package com.example.plugin;
 
+import com.example.plugin.commands.BaltopCommand;
 import com.example.plugin.commands.BalanceCommand;
 import com.example.plugin.commands.EcoCommand;
+import com.example.plugin.commands.MoneyGiveCommand;
+import com.example.plugin.commands.MoneySetCommand;
 import com.example.plugin.commands.PayCommand;
 import com.example.plugin.economy.ConfigLoader;
 import com.example.plugin.economy.EconomyConfig;
@@ -55,8 +58,11 @@ public class EconomyPlugin extends JavaPlugin {
     private void registerCommands(EconomyConfig config) {
         Object registry = this.getCommandRegistry();
         registerCommand(registry, new BalanceCommand(economyService, config));
+        registerCommand(registry, new BaltopCommand(economyService, config));
         registerCommand(registry, new PayCommand(economyService, config));
         registerCommand(registry, new EcoCommand(economyService, config, LOGGER));
+        registerCommand(registry, new MoneyGiveCommand(economyService, config));
+        registerCommand(registry, new MoneySetCommand(economyService, config));
     }
 
     private void registerEvents() {

@@ -74,6 +74,18 @@ public class EconomyService {
     }
 
     /**
+     * Returns a snapshot of all balances for read-only operations.
+     */
+    public Map<UUID, BigDecimal> getBalancesSnapshot() {
+        lock.readLock().lock();
+        try {
+            return Map.copyOf(balances);
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    /**
      * Ensures a player has an account with at least the starting balance.
      */
     public void ensureAccount(UUID playerId) {

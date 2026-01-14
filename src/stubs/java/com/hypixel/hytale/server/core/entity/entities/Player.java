@@ -21,4 +21,8 @@ public class Player {
     public String getDisplayName() {
         return displayName;
     }
+
+    public com.hypixel.hytale.server.core.universe.PlayerRef getReference() {
+        return new com.hypixel.hytale.server.core.universe.PlayerRef(uuid, displayName);
+    }
 }

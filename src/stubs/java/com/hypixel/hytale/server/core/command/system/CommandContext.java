@@ -24,6 +24,13 @@ public class CommandContext {
         // no-op stub
     }
 
+    public com.hypixel.hytale.server.core.entity.entities.Player senderAsPlayer() {
+        if (sender instanceof com.hypixel.hytale.server.core.entity.entities.Player player) {
+            return player;
+        }
+        return null;
+    }
+
     @SuppressWarnings("unchecked")
     public <T> T get(Object arg) {
         return (T) args.get(arg);

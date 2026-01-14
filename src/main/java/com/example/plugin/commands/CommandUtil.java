@@ -12,19 +12,26 @@ public final class CommandUtil {
 
     @Nullable
     public static PlayerRef requirePlayer(CommandContext context) {
-        Object sender = context.sender();
-        if (sender instanceof PlayerRef playerRef) {
-            return playerRef;
+        try {
+            Object player = context.getClass().getMethod("senderAsPlayer").invoke(context);
+            if (player != null) {
+                Object reference = player.getClass().getMethod("getReference").invoke(player);
+                if (reference instanceof PlayerRef playerRef) {
+                    return playerRef;
+                }
+            }
+        } catch (ReflectiveOperationException ignored) {
+            // fall through
         }
         context.sendMessage(Message.raw("This command can only be used by players."));
         return null;
     }
 
     public static boolean hasPermission(CommandContext context, String permission) {
-        Object sender = context.sender();
-        if (sender instanceof PlayerRef playerRef) {
-            return playerRef.hasPermission(permission);
+        PlayerRef sender = requirePlayer(context);
+        if (sender == null) {
+            return false;
         }
-        return false;
+        return sender.hasPermission(permission);
     }
 }

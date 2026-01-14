@@ -17,31 +17,34 @@ public class MoneyGiveCommand extends AbstractCommand {
     private static final String PERMISSION_ADMIN = "economy.money.give";
 
     @NonNull
-    private final RequiredArg<PlayerRef> playerArg;
+    private final RequiredArg<String> playerArg;
     @NonNull
     private final RequiredArg<BigDecimal> amountArg;
     private final EconomyService economyService;
     private final CurrencyFormatter formatter;
+    private final PlayerLookup playerLookup;
 
-    public MoneyGiveCommand(EconomyService economyService, EconomyConfig config) {
+    public MoneyGiveCommand(EconomyService economyService, EconomyConfig config, PlayerLookup playerLookup) {
         super("moneygive", "Give money to a player");
         requirePermission(PERMISSION_ADMIN);
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
-        this.playerArg = this.withRequiredArg("player", ArgTypes.PLAYER);
+        this.playerArg = this.withRequiredArg("player", ArgTypes.STRING);
         this.amountArg = this.withRequiredArg("amount", ArgTypes.DECIMAL);
+        this.playerLookup = playerLookup;
     }
 
     @Override
     protected CompletableFuture<Void> execute(@NonNull CommandContext context) {
-        PlayerRef target = context.get(this.playerArg);
+        String targetName = context.getArg(this.playerArg);
+        PlayerRef target = playerLookup.findOnlinePlayer(targetName);
         if (target == null) {
             context.sender().sendMessage("That player could not be found.");
             return CompletableFuture.completedFuture(null);
         }
         economyService.updatePlayerName(target.getUuid(), target.getDisplayName());
 
-        BigDecimal amount = toBigDecimal(context.get(this.amountArg));
+        BigDecimal amount = toBigDecimal(context.getArg(this.amountArg));
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             context.sender().sendMessage("Amount must be greater than zero.");
             return CompletableFuture.completedFuture(null);

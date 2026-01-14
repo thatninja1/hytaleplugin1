@@ -16,36 +16,38 @@ import java.util.concurrent.CompletableFuture;
 
 public class PayCommand extends AbstractCommand {
     @NonNull
-    private final RequiredArg<PlayerRef> playerArg;
+    private final RequiredArg<String> playerArg;
     @NonNull
     private final RequiredArg<BigDecimal> amountArg;
     private final EconomyService economyService;
     private final CurrencyFormatter formatter;
+    private final PlayerLookup playerLookup;
 
-    public PayCommand(EconomyService economyService, EconomyConfig config) {
+    public PayCommand(EconomyService economyService, EconomyConfig config, PlayerLookup playerLookup) {
         super("pay", "Pay another player");
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
-        this.playerArg = this.withRequiredArg("player", ArgTypes.PLAYER);
+        this.playerArg = this.withRequiredArg("player", ArgTypes.STRING);
         this.amountArg = this.withRequiredArg("amount", ArgTypes.DECIMAL);
+        this.playerLookup = playerLookup;
     }
 
     @Override
     protected CompletableFuture<Void> execute(@NonNull CommandContext context) {
-        Object sender = context.sender();
-        if (!(sender instanceof PlayerRef senderRef)) {
-            context.sender().sendMessage("This command can only be used by players.");
+        PlayerRef senderRef = CommandUtil.requirePlayer(context);
+        if (senderRef == null) {
             return CompletableFuture.completedFuture(null);
         }
         economyService.updatePlayerName(senderRef.getUuid(), senderRef.getDisplayName());
 
-        PlayerRef target = context.get(this.playerArg);
+        String targetName = context.getArg(this.playerArg);
+        PlayerRef target = playerLookup.findOnlinePlayer(targetName);
         if (target == null) {
             context.sender().sendMessage("That player could not be found.");
             return CompletableFuture.completedFuture(null);
         }
         economyService.updatePlayerName(target.getUuid(), target.getDisplayName());
-        BigDecimal amount = toBigDecimal(context.get(this.amountArg));
+        BigDecimal amount = toBigDecimal(context.getArg(this.amountArg));
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             context.sender().sendMessage("Amount must be greater than zero.");
             return CompletableFuture.completedFuture(null);

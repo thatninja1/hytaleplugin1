@@ -1,6 +1,7 @@
 package com.example.plugin.commands;
 
 import com.hypixel.hytale.server.core.command.system.CommandContext;
+import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 
 import com.hypixel.hytale.server.core.command.system.CommandSender;
@@ -16,6 +17,9 @@ public final class CommandUtil {
         CommandSender sender = context.sender();
         if (sender instanceof PlayerRef playerRef) {
             return playerRef;
+        }
+        if (sender instanceof Player player) {
+            return player.getReference();
         }
         sender.sendMessage("This command can only be used by players.");
         return null;

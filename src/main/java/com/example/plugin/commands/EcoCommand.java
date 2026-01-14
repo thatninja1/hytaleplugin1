@@ -22,34 +22,37 @@ public class EcoCommand extends AbstractCommand {
     @NonNull
     private final RequiredArg<String> actionArg;
     @NonNull
-    private final RequiredArg<PlayerRef> playerArg;
+    private final RequiredArg<String> playerArg;
     @NonNull
     private final RequiredArg<BigDecimal> amountArg;
     private final EconomyService economyService;
     private final CurrencyFormatter formatter;
     private final Logger logger;
+    private final PlayerLookup playerLookup;
 
-    public EcoCommand(EconomyService economyService, EconomyConfig config, Logger logger) {
+    public EcoCommand(EconomyService economyService, EconomyConfig config, Logger logger, PlayerLookup playerLookup) {
         super("eco", "Admin economy commands");
         requirePermission(PERMISSION_ADMIN);
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
         this.logger = logger;
         this.actionArg = this.withRequiredArg("action", ArgTypes.STRING);
-        this.playerArg = this.withRequiredArg("player", ArgTypes.PLAYER);
+        this.playerArg = this.withRequiredArg("player", ArgTypes.STRING);
         this.amountArg = this.withRequiredArg("amount", ArgTypes.DECIMAL);
+        this.playerLookup = playerLookup;
     }
 
     @Override
     protected CompletableFuture<Void> execute(@NonNull CommandContext context) {
-        String action = ((String) context.get(this.actionArg)).toLowerCase(Locale.ROOT);
-        PlayerRef target = context.get(this.playerArg);
+        String action = context.getArg(this.actionArg).toLowerCase(Locale.ROOT);
+        String targetName = context.getArg(this.playerArg);
+        PlayerRef target = playerLookup.findOnlinePlayer(targetName);
         if (target == null) {
             context.sender().sendMessage("That player could not be found.");
             return CompletableFuture.completedFuture(null);
         }
         economyService.updatePlayerName(target.getUuid(), target.getDisplayName());
-        BigDecimal amount = toBigDecimal(context.get(this.amountArg));
+        BigDecimal amount = toBigDecimal(context.getArg(this.amountArg));
         if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0) {
             context.sender().sendMessage("Amount cannot be negative.");
             return CompletableFuture.completedFuture(null);

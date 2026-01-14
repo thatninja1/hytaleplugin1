@@ -30,6 +30,14 @@ public class CommandContext {
         return (T) args.get(arg);
     }
 
+    public <T> T getArg(Object arg) {
+        return get(arg);
+    }
+
+    public <T> T getArgOrNull(Object arg) {
+        return get(arg);
+    }
+
     public void put(Object arg, Object value) {
         args.put(arg, value);
     }

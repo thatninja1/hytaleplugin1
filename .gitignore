@@ -3,3 +3,5 @@ build/
 *.class
 *.jar
 /out/
+/target/
+/libraries/*.jar

@@ -19,17 +19,14 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
-          cache: gradle
-
-      - name: Ensure Gradle wrapper is executable
-        run: chmod +x ./gradlew
+          cache: maven
 
       - name: Build
-        run: ./gradlew clean build -Pci=true --stacktrace
+        run: mvn -B -Dci=true clean package
 
       - name: Upload jar artifact
         uses: actions/upload-artifact@v4
         with:
           name: economy-plugin-jar
-          path: build/libs/*.jar
+          path: target/*.jar
           if-no-files-found: error

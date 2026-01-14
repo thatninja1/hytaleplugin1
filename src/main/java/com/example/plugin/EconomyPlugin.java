@@ -22,6 +22,7 @@ import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -59,7 +60,8 @@ public class EconomyPlugin extends JavaPlugin {
     }
 
     private void registerEvents() {
-        this.getEventRegistry().registerGlobal(PlayerReadyEvent.class,
+        Object registry = resolveEventRegistry();
+        registerEvent(registry, PlayerReadyEvent.class,
                 event -> PlayerReadyListener.onPlayerReady(event, economyService));
     }
 
@@ -102,6 +104,56 @@ public class EconomyPlugin extends JavaPlugin {
             }
         }
         throw new IllegalStateException("No compatible CommandRegistry registration method found.");
+    }
+
+    private Object resolveEventRegistry() {
+        String[] methodNames = {"getEventRegistry", "getEvents", "getEventManager"};
+        for (String methodName : methodNames) {
+            try {
+                var method = this.getClass().getMethod(methodName);
+                Object registry = method.invoke(this);
+                if (registry != null) {
+                    return registry;
+                }
+            } catch (ReflectiveOperationException ignored) {
+                // try next method
+            }
+        }
+        String[] fieldNames = {"eventRegistry", "events", "eventManager"};
+        for (String fieldName : fieldNames) {
+            try {
+                var field = this.getClass().getDeclaredField(fieldName);
+                field.setAccessible(true);
+                Object registry = field.get(this);
+                if (registry != null) {
+                    return registry;
+                }
+            } catch (ReflectiveOperationException ignored) {
+                // try next field
+            }
+        }
+        throw new IllegalStateException("No compatible EventRegistry access point found.");
+    }
+
+    private <T> void registerEvent(Object registry, Class<T> eventType, Consumer<T> handler) {
+        String[] methodNames = {"registerGlobal", "register"};
+        for (String methodName : methodNames) {
+            var method = Arrays.stream(registry.getClass().getMethods())
+                    .filter(candidate -> candidate.getName().equals(methodName))
+                    .filter(candidate -> candidate.getParameterCount() == 2)
+                    .filter(candidate -> candidate.getParameterTypes()[0].isAssignableFrom(Class.class))
+                    .findFirst()
+                    .orElse(null);
+            if (method != null) {
+                try {
+                    method.invoke(registry, eventType, handler);
+                    return;
+                } catch (ReflectiveOperationException exception) {
+                    throw new IllegalStateException("Failed to register event via " + methodName + ".", exception);
+                }
+            }
+        }
+        throw new IllegalStateException("No compatible EventRegistry registration method found.");
     }
 
     private Path resolveDataDirectory() {

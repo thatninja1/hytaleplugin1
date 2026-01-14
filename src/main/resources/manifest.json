@@ -1,19 +1,12 @@
 {
-  "Group": "com.example",
+  "Id": "economy-plugin",
   "Name": "EconomyPlugin",
   "Version": "1.0.0",
-  "Description": "A production-ready economy system for Hytale servers.",
+  "Type": "plugin",
+  "Entrypoint": "com.example.plugin.EconomyPlugin",
+  "Description": "Basic economy plugin with /balance, /pay, /eco, /baltop",
   "Authors": [
-    {
-      "Name": "Your Name",
-      "Email": "your.email@example.com",
-      "Url": "https://example.com"
-    }
+    "ThatNinja"
   ],
-  "Website": "https://example.com",
-  "ServerVersion": "*",
-  "Dependencies": {},
-  "OptionalDependencies": {},
-  "DisabledByDefault": false,
-  "Main": "com.example.plugin.EconomyPlugin"
+  "Dependencies": []
 }

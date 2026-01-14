@@ -25,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class EconomyPlugin extends JavaPlugin {
+    private static final Logger LOGGER = Logger.getLogger(EconomyPlugin.class.getName());
     private EconomyService economyService;
     private ScheduledExecutorService autosaveScheduler;
 
@@ -34,26 +35,25 @@ public class EconomyPlugin extends JavaPlugin {
 
     @Override
     protected void setup() {
-        Logger logger = getLogger();
         Path dataDirectory = resolveDataDirectory();
-        ensureDirectory(dataDirectory, logger);
+        ensureDirectory(dataDirectory);
 
-        EconomyConfig config = new ConfigLoader(dataDirectory, logger).load();
-        StorageProvider storageProvider = new JsonStorageProvider(dataDirectory.resolve("balances.json"), logger);
-        this.economyService = new EconomyService(storageProvider, config.startingBalance(), logger);
+        EconomyConfig config = new ConfigLoader(dataDirectory, LOGGER).load();
+        StorageProvider storageProvider = new JsonStorageProvider(dataDirectory.resolve("balances.json"), LOGGER);
+        this.economyService = new EconomyService(storageProvider, config.startingBalance(), LOGGER);
         this.economyService.loadBalances();
 
-        registerCommands(config, logger);
+        registerCommands(config);
         registerEvents();
-        scheduleAutosave(config, logger);
+        scheduleAutosave(config);
 
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdownSafely));
     }
 
-    private void registerCommands(EconomyConfig config, Logger logger) {
+    private void registerCommands(EconomyConfig config) {
         this.getCommandRegistry().registerCommand(new BalanceCommand(economyService, config));
         this.getCommandRegistry().registerCommand(new PayCommand(economyService, config));
-        this.getCommandRegistry().registerCommand(new EcoCommand(economyService, config, logger));
+        this.getCommandRegistry().registerCommand(new EcoCommand(economyService, config, LOGGER));
     }
 
     private void registerEvents() {
@@ -61,10 +61,10 @@ public class EconomyPlugin extends JavaPlugin {
                 event -> PlayerReadyListener.onPlayerReady(event, economyService));
     }
 
-    private void scheduleAutosave(EconomyConfig config, Logger logger) {
+    private void scheduleAutosave(EconomyConfig config) {
         long autosaveInterval = config.autosaveIntervalSeconds();
         if (autosaveInterval <= 0) {
-            logger.info("Economy autosave is disabled by configuration.");
+            LOGGER.info("Economy autosave is disabled by configuration.");
             return;
         }
 
@@ -78,18 +78,18 @@ public class EconomyPlugin extends JavaPlugin {
                 autosaveInterval,
                 autosaveInterval,
                 TimeUnit.SECONDS);
-        logger.info("Economy autosave scheduled every " + Duration.ofSeconds(autosaveInterval) + ".");
+        LOGGER.info("Economy autosave scheduled every " + Duration.ofSeconds(autosaveInterval) + ".");
     }
 
     private Path resolveDataDirectory() {
         return Path.of("plugins", "economy");
     }
 
-    private void ensureDirectory(Path directory, Logger logger) {
+    private void ensureDirectory(Path directory) {
         try {
             Files.createDirectories(directory);
         } catch (Exception exception) {
-            logger.log(Level.SEVERE, "Failed to create economy data folder at " + directory + ".", exception);
+            LOGGER.log(Level.SEVERE, "Failed to create economy data folder at " + directory + ".", exception);
         }
     }
 

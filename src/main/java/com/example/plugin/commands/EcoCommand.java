@@ -19,11 +19,11 @@ public class EcoCommand extends AbstractCommand {
     private static final String PERMISSION_ADMIN = "economy.admin";
 
     @NonNull
-    private final RequiredArg<String> actionArg;
+    private final RequiredArg<Object> actionArg;
     @NonNull
-    private final RequiredArg<String> playerArg;
+    private final RequiredArg<Object> playerArg;
     @NonNull
-    private final RequiredArg<String> amountArg;
+    private final RequiredArg<Object> amountArg;
     private final EconomyService economyService;
     private final CurrencyFormatter formatter;
     private final Logger logger;
@@ -43,15 +43,26 @@ public class EcoCommand extends AbstractCommand {
 
     @Override
     protected CompletableFuture<Void> execute(@NonNull CommandContext context) {
-        String action = context.getArg(this.actionArg).toLowerCase(Locale.ROOT);
-        String targetName = context.getArg(this.playerArg);
+        Object rawAction = context.getArg(this.actionArg);
+        if (rawAction == null) {
+            context.sender().sendMessage("Missing action.");
+            return CompletableFuture.completedFuture(null);
+        }
+        String action = rawAction.toString().toLowerCase(Locale.ROOT);
+        Object rawTargetName = context.getArg(this.playerArg);
+        if (rawTargetName == null) {
+            context.sender().sendMessage("Player not found.");
+            return CompletableFuture.completedFuture(null);
+        }
+        String targetName = rawTargetName.toString();
         PlayerRef target = playerLookup.findOnlinePlayer(targetName);
         if (target == null) {
             context.sender().sendMessage("Player not found.");
             return CompletableFuture.completedFuture(null);
         }
         economyService.updatePlayerName(target.getUuid(), target.getDisplayName());
-        BigDecimal amount = parseAmount(context.getArg(this.amountArg), context);
+        Object rawAmount = context.getArg(this.amountArg);
+        BigDecimal amount = parseAmount(rawAmount, context);
         if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0) {
             context.sender().sendMessage("Amount cannot be negative.");
             return CompletableFuture.completedFuture(null);
@@ -90,9 +101,13 @@ public class EcoCommand extends AbstractCommand {
         return CompletableFuture.completedFuture(null);
     }
 
-    private BigDecimal parseAmount(String value, CommandContext context) {
+    private BigDecimal parseAmount(Object value, CommandContext context) {
+        if (value == null) {
+            context.sender().sendMessage("Invalid amount.");
+            return null;
+        }
         try {
-            return new BigDecimal(value);
+            return new BigDecimal(value.toString());
         } catch (NumberFormatException exception) {
             context.sender().sendMessage("Invalid amount.");
             return null;

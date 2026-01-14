@@ -15,9 +15,9 @@ import java.util.concurrent.CompletableFuture;
 
 public class PayCommand extends AbstractCommand {
     @NonNull
-    private final RequiredArg<String> playerArg;
+    private final RequiredArg<Object> playerArg;
     @NonNull
-    private final RequiredArg<String> amountArg;
+    private final RequiredArg<Object> amountArg;
     private final EconomyService economyService;
     private final CurrencyFormatter formatter;
     private final PlayerLookup playerLookup;
@@ -39,7 +39,12 @@ public class PayCommand extends AbstractCommand {
         }
         economyService.updatePlayerName(senderRef.getUuid(), senderRef.getDisplayName());
 
-        String targetName = context.getArg(this.playerArg);
+        Object rawTargetName = context.getArg(this.playerArg);
+        if (rawTargetName == null) {
+            context.sender().sendMessage("Player not found.");
+            return CompletableFuture.completedFuture(null);
+        }
+        String targetName = rawTargetName.toString();
         PlayerRef target = playerLookup.findOnlinePlayer(targetName);
         if (target == null) {
             context.sender().sendMessage("Player not found.");
@@ -71,9 +76,13 @@ public class PayCommand extends AbstractCommand {
         return CompletableFuture.completedFuture(null);
     }
 
-    private BigDecimal parseAmount(String value, CommandContext context) {
+    private BigDecimal parseAmount(Object value, CommandContext context) {
+        if (value == null) {
+            context.sender().sendMessage("Invalid amount.");
+            return null;
+        }
         try {
-            return new BigDecimal(value);
+            return new BigDecimal(value.toString());
         } catch (NumberFormatException exception) {
             context.sender().sendMessage("Invalid amount.");
             return null;

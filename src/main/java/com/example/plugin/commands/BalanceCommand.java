@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 public class BalanceCommand extends AbstractCommand {
     private static final String PERMISSION_BALANCE_OTHER = "economy.balance.other";
     @NonNull
-    private final OptionalArg<String> playerArg;
+    private final OptionalArg<Object> playerArg;
     private final EconomyService economyService;
     private final CurrencyFormatter formatter;
     private final PlayerLookup playerLookup;
@@ -38,9 +38,14 @@ public class BalanceCommand extends AbstractCommand {
         }
         economyService.updatePlayerName(playerRef.getUuid(), playerRef.getDisplayName());
 
-        String targetName = context.getArgOrNull(this.playerArg);
+        Object rawTargetName = context.getArgOrNull(this.playerArg);
         PlayerRef target = null;
-        if (targetName != null && !targetName.isBlank()) {
+        if (rawTargetName != null) {
+            String targetName = rawTargetName.toString();
+            if (targetName.isBlank()) {
+                context.sender().sendMessage("Player not found.");
+                return CompletableFuture.completedFuture(null);
+            }
             target = playerLookup.findOnlinePlayer(targetName);
             if (target == null) {
                 context.sender().sendMessage("Player not found.");

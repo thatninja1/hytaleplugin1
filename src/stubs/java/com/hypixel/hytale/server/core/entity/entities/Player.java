@@ -5,7 +5,7 @@ import java.util.UUID;
 /**
  * Stubbed player entity for CI compilation only.
  */
-public class Player {
+public class Player implements com.hypixel.hytale.server.core.commands.CommandSender {
     private final UUID uuid;
     private final String displayName;
 
@@ -24,5 +24,15 @@ public class Player {
 
     public com.hypixel.hytale.server.core.universe.PlayerRef getReference() {
         return new com.hypixel.hytale.server.core.universe.PlayerRef(uuid, displayName);
+    }
+
+    @Override
+    public void sendMessage(String message) {
+        // no-op
+    }
+
+    @Override
+    public boolean hasPermission(String permission) {
+        return false;
     }
 }

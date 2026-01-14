@@ -3,9 +3,10 @@ package com.example.plugin.commands;
 import com.example.plugin.economy.EconomyConfig;
 import com.example.plugin.economy.EconomyService;
 import com.example.plugin.economy.formatter.CurrencyFormatter;
-import com.hypixel.hytale.server.core.command.system.AbstractCommand;
-import com.hypixel.hytale.server.core.command.system.CommandContext;
-import com.hypixel.hytale.server.core.command.system.arguments.system.OptionalArg;
+import com.hypixel.hytale.server.core.commands.AbstractCommand;
+import com.hypixel.hytale.server.core.commands.CommandContext;
+import com.hypixel.hytale.server.core.commands.args.ArgTypes;
+import com.hypixel.hytale.server.core.commands.args.OptionalArg;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -16,20 +17,15 @@ import java.util.concurrent.CompletableFuture;
 public class BalanceCommand extends AbstractCommand {
     private static final String PERMISSION_BALANCE_OTHER = "economy.balance.other";
     @NonNull
-    private final OptionalArg<Object> playerArg;
+    private final OptionalArg<PlayerRef> playerArg;
     private final EconomyService economyService;
     private final CurrencyFormatter formatter;
-    private final PlayerLookup playerLookup;
 
-    public BalanceCommand(EconomyService economyService, EconomyConfig config, PlayerLookup playerLookup) {
+    public BalanceCommand(EconomyService economyService, EconomyConfig config) {
         super("balance", "View your balance or another player's balance");
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
-        Object playerType = new ArgTypesCompat().findPlayerType();
-        this.playerArg = playerType == null
-                ? this.withOptionalArg("player")
-                : this.withOptionalArg("player", playerType);
-        this.playerLookup = playerLookup;
+        this.playerArg = this.withOptionalArg("player", ArgTypes.PLAYER_REF);
         this.addAliases("bal");
     }
 
@@ -41,22 +37,9 @@ public class BalanceCommand extends AbstractCommand {
         }
         economyService.updatePlayerName(playerRef.getUuid(), playerRef.getDisplayName());
 
-        Object rawTargetName = context.getArgOrNull(this.playerArg);
-        PlayerRef target = null;
-        if (rawTargetName != null) {
-            String targetName = rawTargetName.toString();
-            if (targetName.isBlank()) {
-                context.sender().sendMessage("Player not found.");
-                return CompletableFuture.completedFuture(null);
-            }
-            target = playerLookup.findOnlinePlayer(targetName);
-            if (target == null) {
-                context.sender().sendMessage("Player not found.");
-                return CompletableFuture.completedFuture(null);
-            }
-        }
+        PlayerRef target = context.hasArg(this.playerArg) ? context.getArg(this.playerArg) : null;
         if (target != null && !playerRef.getUuid().equals(target.getUuid())) {
-            if (!CommandUtil.hasPermission(context, PERMISSION_BALANCE_OTHER)) {
+            if (!context.sender().hasPermission(PERMISSION_BALANCE_OTHER)) {
                 context.sender().sendMessage("You do not have permission to view other balances.");
                 return CompletableFuture.completedFuture(null);
             }

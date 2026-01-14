@@ -6,7 +6,6 @@ import com.example.plugin.commands.EcoCommand;
 import com.example.plugin.commands.MoneyGiveCommand;
 import com.example.plugin.commands.MoneySetCommand;
 import com.example.plugin.commands.PayCommand;
-import com.example.plugin.commands.PlayerLookup;
 import com.example.plugin.economy.ConfigLoader;
 import com.example.plugin.economy.EconomyConfig;
 import com.example.plugin.economy.EconomyService;
@@ -16,7 +15,6 @@ import com.example.plugin.listeners.PlayerReadyListener;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
-import com.hypixel.hytale.server.core.universe.PlayerRef;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import java.nio.file.Files;
@@ -59,13 +57,12 @@ public class EconomyPlugin extends JavaPlugin {
 
     private void registerCommands(EconomyConfig config) {
         var registry = this.getCommandRegistry();
-        PlayerLookup playerLookup = this::resolveOnlinePlayer;
-        registry.register(new BalanceCommand(economyService, config, playerLookup));
+        registry.register(new BalanceCommand(economyService, config));
         registry.register(new BaltopCommand(economyService, config));
-        registry.register(new PayCommand(economyService, config, playerLookup));
-        registry.register(new EcoCommand(economyService, config, LOGGER, playerLookup));
-        registry.register(new MoneyGiveCommand(economyService, config, playerLookup));
-        registry.register(new MoneySetCommand(economyService, config, playerLookup));
+        registry.register(new PayCommand(economyService, config));
+        registry.register(new EcoCommand(economyService, config, LOGGER));
+        registry.register(new MoneyGiveCommand(economyService, config));
+        registry.register(new MoneySetCommand(economyService, config));
     }
 
     private void registerEvents() {
@@ -166,18 +163,4 @@ public class EconomyPlugin extends JavaPlugin {
         }
     }
 
-    private PlayerRef resolveOnlinePlayer(String name) {
-        if (name == null || name.isBlank()) {
-            return null;
-        }
-        var server = getServer();
-        if (server == null) {
-            return null;
-        }
-        var playerManager = server.getPlayerManager();
-        if (playerManager == null) {
-            return null;
-        }
-        return playerManager.getPlayerByName(name);
-    }
 }

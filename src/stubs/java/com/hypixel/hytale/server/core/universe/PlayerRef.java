@@ -7,7 +7,7 @@ import java.util.UUID;
 /**
  * Stubbed player reference for CI compilation only.
  */
-public class PlayerRef implements com.hypixel.hytale.server.core.command.system.CommandSender {
+public class PlayerRef implements com.hypixel.hytale.server.core.commands.CommandSender {
     private final UUID uuid;
     private final String displayName;
 

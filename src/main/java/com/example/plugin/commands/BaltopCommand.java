@@ -3,8 +3,8 @@ package com.example.plugin.commands;
 import com.example.plugin.economy.EconomyConfig;
 import com.example.plugin.economy.EconomyService;
 import com.example.plugin.economy.formatter.CurrencyFormatter;
-import com.hypixel.hytale.server.core.command.system.AbstractCommand;
-import com.hypixel.hytale.server.core.command.system.CommandContext;
+import com.hypixel.hytale.server.core.commands.AbstractCommand;
+import com.hypixel.hytale.server.core.commands.CommandContext;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import java.util.LinkedHashMap;

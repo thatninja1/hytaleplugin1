@@ -1,6 +1,6 @@
 package com.hypixel.hytale.server.core.plugin;
 
-import com.hypixel.hytale.server.core.command.system.CommandRegistry;
+import com.hypixel.hytale.server.core.commands.CommandRegistry;
 import com.hypixel.hytale.server.core.event.EventRegistry;
 import com.hypixel.hytale.server.core.Server;
 

@@ -3,9 +3,10 @@ package com.example.plugin.commands;
 import com.example.plugin.economy.EconomyConfig;
 import com.example.plugin.economy.EconomyService;
 import com.example.plugin.economy.formatter.CurrencyFormatter;
-import com.hypixel.hytale.server.core.command.system.AbstractCommand;
-import com.hypixel.hytale.server.core.command.system.CommandContext;
-import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
+import com.hypixel.hytale.server.core.commands.AbstractCommand;
+import com.hypixel.hytale.server.core.commands.CommandContext;
+import com.hypixel.hytale.server.core.commands.args.ArgTypes;
+import com.hypixel.hytale.server.core.commands.args.RequiredArg;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -15,27 +16,18 @@ import java.util.concurrent.CompletableFuture;
 
 public class PayCommand extends AbstractCommand {
     @NonNull
-    private final RequiredArg<Object> playerArg;
+    private final RequiredArg<PlayerRef> playerArg;
     @NonNull
-    private final RequiredArg<Object> amountArg;
+    private final RequiredArg<BigDecimal> amountArg;
     private final EconomyService economyService;
     private final CurrencyFormatter formatter;
-    private final PlayerLookup playerLookup;
 
-    public PayCommand(EconomyService economyService, EconomyConfig config, PlayerLookup playerLookup) {
+    public PayCommand(EconomyService economyService, EconomyConfig config) {
         super("pay", "Pay another player");
         this.economyService = economyService;
         this.formatter = new CurrencyFormatter(config);
-        ArgTypesCompat argTypes = new ArgTypesCompat();
-        Object playerType = argTypes.findPlayerType();
-        Object amountType = argTypes.findDecimalType();
-        this.playerArg = playerType == null
-                ? this.withRequiredArg("player")
-                : this.withRequiredArg("player", playerType);
-        this.amountArg = amountType == null
-                ? this.withRequiredArg("amount")
-                : this.withRequiredArg("amount", amountType);
-        this.playerLookup = playerLookup;
+        this.playerArg = this.withRequiredArg("player", ArgTypes.PLAYER_REF);
+        this.amountArg = this.withRequiredArg("amount", ArgTypes.DECIMAL);
     }
 
     @Override
@@ -46,19 +38,13 @@ public class PayCommand extends AbstractCommand {
         }
         economyService.updatePlayerName(senderRef.getUuid(), senderRef.getDisplayName());
 
-        Object rawTargetName = context.getArg(this.playerArg);
-        if (rawTargetName == null) {
-            context.sender().sendMessage("Player not found.");
-            return CompletableFuture.completedFuture(null);
-        }
-        String targetName = rawTargetName.toString();
-        PlayerRef target = playerLookup.findOnlinePlayer(targetName);
+        PlayerRef target = context.getArg(this.playerArg);
         if (target == null) {
             context.sender().sendMessage("Player not found.");
             return CompletableFuture.completedFuture(null);
         }
         economyService.updatePlayerName(target.getUuid(), target.getDisplayName());
-        BigDecimal amount = parseAmount(context.getArg(this.amountArg), context);
+        BigDecimal amount = context.getArg(this.amountArg);
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             context.sender().sendMessage("Amount must be greater than zero.");
             return CompletableFuture.completedFuture(null);
@@ -83,16 +69,4 @@ public class PayCommand extends AbstractCommand {
         return CompletableFuture.completedFuture(null);
     }
 
-    private BigDecimal parseAmount(Object value, CommandContext context) {
-        if (value == null) {
-            context.sender().sendMessage("Invalid amount.");
-            return null;
-        }
-        try {
-            return new BigDecimal(value.toString());
-        } catch (NumberFormatException exception) {
-            context.sender().sendMessage("Invalid amount.");
-            return null;
-        }
-    }
 }
